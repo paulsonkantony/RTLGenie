@@ -6,6 +6,8 @@
 
 ## 🧩 Architecture and Core Components
 
+<img width="2452" height="1322" alt="Tool_HLD" src="https://github.com/user-attachments/assets/2075c66a-e742-4e64-bbd7-4cce7e2e188b" />
+
 RTLGenie operates through a cohesive architecture of interconnected Python modules, each contributing a specialized function to the overall design and verification pipeline:
 
 ### 🛠️ RTL Generation (`rtl_generator.py`)
