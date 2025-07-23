@@ -1,0 +1,53 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+name = "AXI4_lite_slave_register"
+input_spec = """
+## Problem 2: Parameterizable AXI4-Lite Slave Register File - Design Requirements
+
+**Overall Requirements:**
+*   The design must implement a synthesizable AXI4-Lite slave interface.
+*   The design must be parameterizable for the number of registers and base address.
+*   The design must provide read/write access to an internal register file via the AXI4-Lite interface.
+
+**Specific Design Requirements:**
+
+1.  **AXI4-Lite Interface Adherence:**
+    *   **REQ-1.1:** Must implement all 5 AXI4-Lite channels: AW (Address Write), W (Write Data), B (Write Response), AR (Address Read), R (Read Data).
+    *   **REQ-1.2:** Must correctly handle the `_VALID` and `_READY` handshake signals for all channels, following the AXI handshake rules (e.g., `VALID` can assert anytime, `READY` must wait for `VALID` if not ready).
+    *   **REQ-1.3:** Must ensure `VALID` signals are registered outputs, and `READY` signals are combinatorial inputs relative to internal state transitions.
+    *   **REQ-1.4:** Must generate correct AXI response codes:
+        *   `OKAY` (`2'b00`) for successful read/write transactions to valid register addresses.
+        *   `SLVERR` (`2'b10`) for read/write transactions to invalid (out-of-range) register addresses.
+
+2.  **Parameterization:**
+    *   **REQ-2.1:** Must use appropriate HDL constructs (e.g., `parameter` in Verilog, `generic` in VHDL) to define `NUM_REGISTERS` and `BASE_ADDRESS`.
+    *   **REQ-2.2:** The internal register file size and address decoding logic must adapt automatically based on `NUM_REGISTERS`.
+
+3.  **Register File Implementation & Access:**
+    *   **REQ-3.1:** Must implement an internal register file capable of storing `NUM_REGISTERS` number of 32-bit values.
+    *   **REQ-3.2:** For write transactions, `AWADDR` and `WDATA` must be used to update the correct register location.
+    *   **REQ-3.3:** For read transactions, `ARADDR` must be used to retrieve the correct register content, which is then presented on `RDATA`.
+    *   **REQ-3.4:** Must correctly derive the register index (e.g., `[0:NUM_REGISTERS-1]`) from the AXI address (`AWADDR`/`ARADDR`), considering 32-bit word alignment.
+
+4.  **Address Decoding & Validation:**
+    *   **REQ-4.1:** Must implement logic to determine if an incoming AXI address (`AWADDR`/`ARADDR`) falls within the valid range defined by `BASE_ADDRESS` and `NUM_REGISTERS`.
+    *   **REQ-4.2:** Must generate `SLVERR` for addresses outside this valid range.
+
+5.  **State Machine / Control Logic:**
+    *   **REQ-5.1:** Must demonstrate a clear control flow (e.g., using a state machine) to manage the AXI handshake and data transfer process for both read and write operations.
+    *   **REQ-5.2:** Must ensure `BRESP` is returned only after a write transaction is complete (address and data received).
+    *   **REQ-5.3:** Must ensure `RDATA` and `RRESP` are returned only after a read address is received.
+
+6.  **Reset Behavior:**
+    *   **REQ-6.1:** All internal state machine registers and AXI control signals must be correctly initialized on reset.
+    *   **REQ-6.2:** The internal register file should preferably be reset to a known state (e.g., all zeros) on reset.
+
+
+"""

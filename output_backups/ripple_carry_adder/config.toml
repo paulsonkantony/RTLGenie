@@ -1,0 +1,90 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+input_spec = """
+
+**Simple Verilog Design: 4-Bit Ripple-Carry Adder**
+
+**1. Design Name:** `ripple_carry_adder_4bit`
+
+**2. Purpose:** To demonstrate fundamental digital logic design principles, module instantiation, and basic combinational circuit behavior. Specifically, it will add two 4-bit unsigned binary numbers and produce a 4-bit sum and a 1-bit carry-out.
+
+**3. Functionality:**
+    * Takes two 4-bit input binary numbers (A and B).
+    * Takes a 1-bit carry-in (Cin).
+    * Produces a 4-bit sum (S).
+    * Produces a 1-bit carry-out (Cout).
+    * Implements a ripple-carry adder structure using four instantiated 1-bit full adder modules.
+
+**4. Module Structure:**
+
+*   **Top-Level Module:** `ripple_carry_adder_4bit`
+    *   Instantiates four `full_adder_1bit` modules.
+    *   Connects the carry-out of one full adder to the carry-in of the next.
+
+*   **Sub-Module (Instantiated):** `full_adder_1bit`
+    *   Implements the logic for a single 1-bit full adder.
+
+**5. Inputs:**
+
+*   `A` : `input [3:0] A;` (4-bit unsigned number)
+*   `B` : `input [3:0] B;` (4-bit unsigned number)
+*   `Cin`: `input Cin;` (1-bit carry-in)
+
+**6. Outputs:**
+
+*   `S`   : `output [3:0] S;` (4-bit sum)
+*   `Cout`: `output Cout;` (1-bit final carry-out)
+
+**7. Internal Signals (Wires):**
+
+*   `carry_intermediate`: `wire [3:1] carry_intermediate;` (3-bit wire to connect carry-out of FA0 to FA1, FA1 to FA2, FA2 to FA3)
+    *   `carry_intermediate[1]` connects C1 from FA0 to Cin of FA1.
+    *   `carry_intermediate[2]` connects C2 from FA1 to Cin of FA2.
+    *   `carry_intermediate[3]` connects C3 from FA2 to Cin of FA3.
+
+**8. Block Diagram (Conceptual):**
+
+```
+     Cin ----> [FA0] A[0], B[0] ----> S[0], C1
+                      |
+                      v
+                     C1 ----> [FA1] A[1], B[1] ----> S[1], C2
+                                    |
+                                    v
+                                   C2 ----> [FA2] A[2], B[2] ----> S[2], C3
+                                                 |
+                                                 v
+                                                C3 ----> [FA3] A[3], B[3] ----> S[3], Cout
+```
+
+**9. Behavioral/Structural Description (Verilog-like):**
+
+*   **`full_adder_1bit` Module Logic:**
+    *   `sum = A ^ B ^ Cin;`
+    *   `carry_out = (A & B) | (Cin & (A ^ B));`
+
+*   **`ripple_carry_adder_4bit` Module Structure:**
+    *   Instantiate `full_adder_1bit` for bit 0:
+        `fa0 ( .A(A[0]), .B(B[0]), .Cin(Cin), .S(S[0]), .Cout(carry_intermediate[1]) );`
+    *   Instantiate `full_adder_1bit` for bit 1:
+        `fa1 ( .A(A[1]), .B(B[1]), .Cin(carry_intermediate[1]), .S(S[1]), .Cout(carry_intermediate[2]) );`
+    *   Instantiate `full_adder_1bit` for bit 2:
+        `fa2 ( .A(A[2]), .B(B[2]), .Cin(carry_intermediate[2]), .S(S[2]), .Cout(carry_intermediate[3]) );`
+    *   Instantiate `full_adder_1bit` for bit 3:
+        `fa3 ( .A(A[3]), .B(B[3]), .Cin(carry_intermediate[3]), .S(S[3]), .Cout(Cout) );`
+
+**10. Design Style:** Primarily structural (instantiating sub-modules), with behavioral (assign statements or logic gates) for the `full_adder_1bit` sub-module.
+
+**11. Constraints/Assumptions:**
+    *   Numbers are unsigned.
+    *   Combinational logic (no clocks, no sequential elements).
+    *   Target technology: Generic ASIC or FPGA (logic synthesis tool will map to gates).
+
+"""

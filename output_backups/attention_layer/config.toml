@@ -1,0 +1,98 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+input_spec = """
+
+**Verilog RTL Design Specification: Transformer Attention Module**
+
+**1. Project Goal:**
+Implement a hardware accelerator for the core matrix multiplication operations of the Transformer's self-attention mechanism, leveraging an external SRAM for data and weights.
+
+**2. Module(s) & Functionality:**
+
+*   **ECE464 Module: `attention_qkt`**
+    *   **Input:** `I` (Input Embedding, 4x16), `WQ` (Query Weight, 16x16), `WK` (Key Weight, 16x16)
+    *   **Output:** `Q` (Query, 4x16), `K` (Key, 4x16), `S` (Score, 4x4)
+    *   **Operations:**
+        1.  `Q = I * WQ`
+        2.  `K = I * WK`
+        3.  `KT = Transpose(K)`
+        4.  `S = Q * KT`
+
+*   **ECE564 Module: `scaled_dot_product_attention`**
+    *   **Input:** `I` (Input Embedding, 4x16), `WQ` (Query Weight, 16x16), `WK` (Key Weight, 16x16), `WV` (Value Weight, 16x16)
+    *   **Output:** `Q` (Query, 4x16), `K` (Key, 4x16), `V` (Value, 4x16), `S` (Score, 4x4), `Z` (Attention Output, 4x16)
+    *   **Operations:**
+        1.  `Q = I * WQ`
+        2.  `K = I * WK`
+        3.  `V = I * WV`
+        4.  `KT = Transpose(K)`
+        5.  `S = Q * KT`
+        6.  `Z = S * V`
+    *   *Note: Softmax and `sqrt(dk)` scaling are not part of this RTL design scope.*
+
+**3. Interfaces:**
+
+*   **System Signals:**
+    *   `clk`: input logic (Clock)
+    *   `reset_n`: input logic (Active-low asynchronous reset)
+
+*   **Control Handshake:**
+    *   `dut_valid`: input logic (Asserted by testbench when input is ready)
+    *   `dut_ready`: output logic (Asserted by DUT when ready for input OR computation complete/results stored)
+
+*   **SRAM Interface:**
+    *   `sram_read_address`: output logic [`ADDR_WIDTH`-1:0]
+    *   `sram_read_data`: input logic [`DATA_WIDTH`-1:0]
+    *   `sram_write_address`: output logic [`ADDR_WIDTH`-1:0]
+    *   `sram_write_data`: output logic [`DATA_WIDTH`-1:0]
+    *   `sram_write_enable`: output logic (Active high)
+
+**4. Parameters:**
+
+*   `DATA_WIDTH`: 32 (bits)
+*   `ADDR_WIDTH`: 12 (bits, sufficient for 12'h10F maximum address)
+
+**5. SRAM Memory Map (All data is 32-bit):**
+
+*   **`sram_input` (Read Only):**
+    *   `12'h00`: Input Matrix Dimensions (I_rows[31:16], I_cols[15:0])
+    *   `12'h01` to `12'h40`: `I` matrix elements (I1 to I64)
+
+*   **`sram_weight` (Read Only):**
+    *   `12'h00`: Weight Matrix Dimensions (W_rows[31:16], W_cols[15:0])
+    *   `12'h01` to `12'hFF`: `WQ` matrix elements (wq1 to wq256)
+    *   `12'h100` to `12'h1FF`: `WK` matrix elements (wk1 to wk256)
+    *   `12'h200` to `12'h2FF`: `WV` matrix elements (wv1 to wv256, ECE564 only)
+
+*   **`sram_result` (Write Only):**
+    *   `12'h00` to `12'h3F`: `Q` matrix elements (Q1 to Q64)
+    *   `12'h40` to `12'h7F`: `K` matrix elements (K1 to K64)
+    *   `12'h80` to `12'hBF`: `V` matrix elements (V1 to V64, ECE564 only)
+    *   `12'hC0` to `12'hCF`: `S` matrix elements (S1 to S16)
+    *   `12'hD0` to `12'h10F`: `Z` matrix elements (Z1 to Z64, ECE564 only)
+
+**6. SRAM Timing & Behavior:**
+
+*   **Read Latency:** 1 clock cycle (data available on `sram_read_data` in the cycle following `sram_read_address` assertion).
+*   **Write Behavior:** Data asserted on `sram_write_data` is written to `sram_write_address` in the cycle following `sram_write_enable` assertion.
+*   **Pipelining:** SRAM supports pipelined requests (different read/write addresses simultaneously).
+*   **RAW Hazard:** Cannot perform consecutive Read-After-Write to the *same* address. DUT must handle this timing.
+
+**7. Design Requirements:**
+
+*   **Language:** Verilog / SystemVerilog.
+*   **Synthesizability:** Design must be synthesizable.
+*   **Quality:** No latches, wired-OR, or combinational feedback.
+*   **SystemVerilog Feature:** Incorporate at least one unique SystemVerilog coding feature.
+*   **Control Flow:** Implement a Finite State Machine (FSM) to manage operations (read inputs, compute, write outputs, handle handshake).
+*   **Matrix Multiplication:** Design efficient hardware for matrix multiplication (e.g., using MAC units).
+*   **Data Representation:** Assume integer or fixed-point arithmetic for matrix elements; the data width is 32 bits.
+
+"""

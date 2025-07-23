@@ -1,0 +1,74 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+name = "register_file"
+input_spec = """
+**Register File Implementation & Access:**
+    *   **REQ-3.1:** Must implement an internal register file capable of storing `NUM_REGISTERS` number of 32-bit values.
+    *   **REQ-3.2:** For write transactions, `AWADDR` and `WDATA` must be used to update the correct register location.
+    *   **REQ-3.3:** For read transactions, `ARADDR` must be used to retrieve the correct register content, which is then presented on `RDATA`.
+    *   **REQ-3.4:** Must correctly derive the register index (e.g., `[0:NUM_REGISTERS-1]`) from the AXI address (`AWADDR`/`ARADDR`), considering 32-bit word alignment.
+
+4.  **Address Decoding & Validation:**
+    *   **REQ-4.1:** Must implement logic to determine if an incoming AXI address (`AWADDR`/`ARADDR`) falls within the valid range defined by `BASE_ADDRESS` and `NUM_REGISTERS`.
+    *   **REQ-4.2:** Must generate `SLVERR` for addresses outside this valid range.
+
+5.  **State Machine / Control Logic:**
+    *   **REQ-5.1:** Must demonstrate a clear control flow (e.g., using a state machine) to manage the AXI handshake and data transfer process for both read and write operations.
+    *   **REQ-5.2:** Must ensure `BRESP` is returned only after a write transaction is complete (address and data received).
+    *   **REQ-5.3:** Must ensure `RDATA` and `RRESP` are returned only after a read address is received.
+
+6.  **Reset Behavior:**
+    *   **REQ-6.1:** All internal state machine registers and AXI control signals must be correctly initialized on reset.
+    *   **REQ-6.2:** The internal register file should preferably be reset to a known state (e.g., all zeros) on reset.
+
+---
+
+## Problem 3: Data Integrity Checker - Design Requirements
+
+**Overall Requirements:**
+*   The design must implement a synthesizable RTL module for checksum calculation and verification.
+*   The module must support two distinct modes: `CHECKSUM_MODE` and `VERIFY_MODE`.
+*   The checksum algorithm must be the XOR sum of 32-bit data words over a block of 1024 words.
+*   The module must be able to accept one `data_in` word per clock cycle when valid.
+
+**Specific Design Requirements:**
+
+1.  **Core Checksum Logic:**
+    *   **REQ-1.1:** Must implement a 32-bit accumulator register to store the running XOR sum of `data_in`.
+    *   **REQ-1.2:** The accumulator must update its value by XORing with `data_in` on cycles when `data_in_valid` is high.
+    *   **REQ-1.3:** The accumulator must reset to 0 when a block completes or on `rst_n`.
+
+2.  **Word Counting & Block Completion:**
+    *   **REQ-2.1:** Must include a counter (e.g., 10-bit for 0-1023) to track the number of `data_in_valid` cycles within a block.
+    *   **REQ-2.2:** The counter must increment on each `data_in_valid` pulse.
+    *   **REQ-2.3:** When the counter reaches 1023 (indicating 1024 words processed), the `checksum_done` signal must assert high for one clock cycle.
+    *   **REQ-2.4:** Upon block completion, the counter must reset to 0 to begin the next block.
+
+3.  **Mode-Specific Functionality (`mode` input):**
+    *   **REQ-3.1 (CHECKSUM_MODE, `mode` = 0):**
+        *   `checksum_out` must reflect the final calculated checksum when `checksum_done` is high.
+        *   `verify_pass` and `verify_fail` must remain deasserted.
+    *   **REQ-3.2 (VERIFY_MODE, `mode` = 1):**
+        *   `checksum_out` can be ignored or driven to '0'.
+        *   When `checksum_done` is high, `current_checksum` must be compared against `expected_checksum`.
+        *   `verify_pass` must assert high for one clock cycle if the calculated checksum matches `expected_checksum`.
+        *   `verify_fail` must assert high for one clock cycle if the calculated checksum *does not* match `expected_checksum`.
+        *   `verify_pass` and `verify_fail` must be mutually exclusive.
+
+4.  **Throughput & Latency:**
+    *   **REQ-4.1:** The module must process one `data_in` word per clock cycle (if `data_in_valid` is high) without stalling.
+    *   **REQ-4.2:** `checksum_done`, `checksum_out`, `verify_pass`, and `verify_fail` must be available one clock cycle after the 1024th word has been processed (due to internal register updates).
+
+5.  **Reset Behavior:**
+    *   **REQ-5.1:** All internal registers (checksum accumulator, word counter) must be correctly initialized to their default states (e.g., 0) on `rst_n`.
+    *   **REQ-5.2:** All output signals (`checksum_done`, `verify_pass`, `verify_fail`, `checksum_out`) must be in a safe, deasserted, or known state on `rst_n`.
+
+
+"""

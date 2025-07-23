@@ -1,0 +1,50 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+input_spec = """
+## Problem 1: Asynchronous FIFO with Handshake - Design Requirements
+
+**Overall Requirements:**
+*   The design must provide an asynchronous FIFO functionality for 32-bit data with a depth of 8.
+*   All interfaces (`din`, `wr_en`, `wr_rdy`, `dout`, `rd_en`, `rd_rdy`, `full`, `empty`) must operate synchronously to their respective clocks (`CLK_WR` or `CLK_RD`).
+*   The design must be synthesizable RTL.
+
+**Specific Design Requirements:**
+
+1.  **Clock Domain Crossing (CDC) Mechanism:**
+    *   **REQ-1.1:** Must explicitly identify the need for pointer synchronization across clock domains.
+    *   **REQ-1.2:** Must employ a robust synchronization technique for the write pointer into the read clock domain and the read pointer into the write clock domain.
+        *   **Preferred:** Dual-flop or triple-flop synchronizers (e.g., CDC stages for `wr_ptr_sync`, `rd_ptr_sync`).
+        *   **Acceptable Alternative (with justification):** Gray code encoding for pointers, followed by binary conversion.
+    *   **REQ-1.3:** Must explicitly mention how the chosen CDC method mitigates metastability.
+
+2.  **Pointer Management:**
+    *   **REQ-2.1:** Must use pointers (e.g., `wr_ptr`, `rd_ptr`) to track read and write positions within the FIFO memory.
+    *   **REQ-2.2:** Pointers must correctly wrap around (e.g., 0 to 7, then back to 0).
+    *   **REQ-2.3:** Must define how pointers are incremented and managed based on `wr_en` and `rd_en`.
+
+3.  **Full/Empty Flag Logic:**
+    *   **REQ-3.1:** Must generate a `full` signal that asserts when the FIFO has no more space for new data.
+    *   **REQ-3.2:** Must generate an `empty` signal that asserts when the FIFO contains no valid data.
+    *   **REQ-3.3:** Must correctly distinguish between a full and an empty state, even when pointers are numerically equal (e.g., using an extra bit in the pointers or another logic mechanism).
+    *   **REQ-3.4:** The `full` and `empty` logic must rely on the *synchronized* versions of the cross-domain pointers.
+
+4.  **Handshake Protocol Implementation:**
+    *   **REQ-4.1:** `wr_rdy` must be asserted when the FIFO is not full and ready to accept data, otherwise deasserted.
+    *   **REQ-4.2:** `rd_rdy` must be asserted when the FIFO is not empty and has valid data to be read, otherwise deasserted.
+    *   **REQ-4.3:** Data (`din`) must be sampled and stored only when `wr_en` is high and `wr_rdy` is high.
+    *   **REQ-4.4:** Data (`dout`) must be valid for reading when `rd_en` is high and `rd_rdy` is high.
+
+5.  **Memory Implementation:**
+    *   **REQ-5.1:** Must specify a memory element (e.g., an array of registers or a block RAM inference) to store the 8x32-bit data.
+
+6.  **Reset Behavior:**
+    *   **REQ-6.1:** All internal state elements (pointers, flags) must be correctly initialized on reset.
+
+"""

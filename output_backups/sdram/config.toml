@@ -1,0 +1,79 @@
+[LLM]
+azure_deployment    = '<PUT YOUR deployment HERE"'
+azure_endpoint      = '<PUT YOUR endpoint HERE"'
+openai_api_type     = 'azure'
+openai_api_version  = '2024-08-01-preview'
+model               = 'gpt-4o-mini'
+key                 = '<PUT YOUR key HERE"'
+
+[SPEC]
+input_spec = """
+
+Simple SDRAM RTL Design Specifications
+1. Overview
+
+    Type: Synchronous Dynamic Random Access Memory (SDRAM)
+    Data Width: 8 bits
+    Address Width: 8 bits (supports 256 bytes of memory)
+    Clock Frequency: 50 MHz
+
+2. Functional Requirements
+
+    Read Operation:
+        Initiated by a READ command.
+        Data is available on the data bus after a fixed latency.
+    Write Operation:
+        Initiated by a WRITE command.
+        Data is written to the specified address on the rising edge of the clock.
+    Refresh Operation:
+        Manual refresh command to maintain data integrity.
+    Idle State:
+        The SDRAM should remain in an idle state when not in active use.
+
+3. Interface Signals
+
+    Clock (CLK): Input clock signal.
+    Chip Select (CS): Active low signal to enable the SDRAM.
+    Row Address Strobe (RAS): Active low signal to latch the row address.
+    Column Address Strobe (CAS): Active low signal to latch the column address.
+    Write Enable (WE): Active low signal to enable write operations.
+    Address Bus (ADDR): 8-bit bus for addressing memory locations.
+    Data Bus (DQ): 8-bit bus for data input/output.
+
+4. Timing Parameters
+
+    tRCD: Time from RAS to CAS (set to 2 clock cycles).
+    tCAS: Column Address Strobe latency (set to 2 clock cycles).
+    tRP: Time to precharge a row (set to 2 clock cycles).
+
+5. State Machine
+
+    States:
+        Idle
+        Active
+        Read
+        Write
+        Refresh
+    Transitions:
+        Transition from Idle to Active on RAS.
+        Transition to Read or Write based on CAS and WE signals.
+        Transition to Refresh on a refresh command.
+
+6. Basic Operation Flow
+
+    Write Operation:
+        Assert CS, RAS, and CAS.
+        Present the address on the ADDR bus.
+        Assert WE to write data on the DQ bus.
+        Deassert WE, RAS, and CAS to complete the operation.
+    Read Operation:
+        Assert CS, RAS, and CAS.
+        Present the address on the ADDR bus.
+        Deassert WE; data will be available on the DQ bus after tCAS.
+        Deassert RAS and CAS to complete the operation.
+    Refresh Operation:
+        Assert CS and RAS.
+        Deassert RAS to complete the refresh.
+
+
+"""

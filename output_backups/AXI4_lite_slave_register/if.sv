@@ -1,0 +1,20 @@
+module AXI4LiteSlave #(parameter NUM_REGISTERS = 4, parameter BASE_ADDRESS = 32'h80000000)(
+    input  logic                  clk,
+    input  logic                  reset,
+    input  logic [31:0]          AWADDR,
+    input  logic                  AWVALID,
+    output logic                  AWREADY,
+    input  logic [31:0]          WDATA,
+    input  logic                  WVALID,
+    output logic                  WREADY,
+    output logic [1:0]           BRESP,
+    output logic                  BVALID,
+    input  logic                  BREADY,
+    input  logic [31:0]          ARADDR,
+    input  logic                  ARVALID,
+    output logic                  ARREADY,
+    output logic [31:0]          RDATA,
+    output logic [1:0]           RRESP,
+    output logic                  RVALID,
+    input  logic                  RREADY
+);
