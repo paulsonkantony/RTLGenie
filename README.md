@@ -70,7 +70,7 @@ To initiate the generation and verification process with RTLGenie:
 
 ## 📚 Citation
 
-RTLGenie is developed based on the principles and foundational work of the **MAGE (Multi-Agent Engine)** project.
+RTLGenie is developed based on the principles and foundational work of the **MAGE: A Multi-Agent Engine for Automated RTL Code Generation** project.
 
 > Y. Zhao, H. Zhang, H. Huang, Z. Yu, and J. Zhao, ‘MAGE: A Multi-Agent Engine for Automated RTL Code Generation’, *arXiv \[cs.AR]*. 2024.
 
